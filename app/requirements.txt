@@ -1,0 +1,23 @@
+# Core LLM and vector search components
+langchain>=0.0.267
+langchain-google-genai>=0.0.5
+langchain-community>=0.0.1
+faiss-cpu>=1.7.4
+numpy>=1.24.0
+
+# Document processing
+pypdf>=3.15.1
+pdf2image>=1.16.3
+pytesseract>=0.3.10
+Pillow>=9.5.0
+
+# External services
+appwrite>=2.0.0
+python-dotenv>=1.0.0
+
+# Web application
+streamlit>=1.24.0
+
+# Utility packages
+tqdm>=4.65.0
+requests>=2.31.0
