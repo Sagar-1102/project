@@ -1,3 +1,5 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 import os
 import pickle
 import logging
@@ -174,3 +176,81 @@ class GeminiHandler:
                 "sources": [],
                 "from_kb": False
             }
+
+# Create Flask application
+app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
+
+# Initialize the GeminiHandler (you might want to handle vector_store initialization here)
+gemini_handler = None
+
+# Root route for basic health check
+@app.route('/', methods=['GET'])
+def home():
+    return jsonify({"status": "Gemini API is running"})
+
+# Test route - make sure this is properly defined
+@app.route('/api/test', methods=['GET'])
+def test():
+    logger.info("Test endpoint called")
+    return jsonify({"message": "running", "status": "ok"})
+
+@app.route('/api/init', methods=['POST'])
+def initialize_handler():
+    global gemini_handler
+    
+    data = request.json
+    memory_file = data.get('memory_file', 'conversation_memory.pkl')
+    
+    # Note: You'll need to implement vector store initialization if needed
+    # This example assumes vector_store is None for simplicity
+    gemini_handler = GeminiHandler(vector_store=None, memory_file=memory_file)
+    
+    return jsonify({"status": "initialized", "memory_file": memory_file})
+
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    global gemini_handler
+    
+    # Initialize handler if not already done
+    if gemini_handler is None:
+        gemini_handler = GeminiHandler(vector_store=None)
+    
+    data = request.json
+    question = data.get('question', '')
+    
+    if not question:
+        return jsonify({
+            "answer": "Please provide a question.",
+            "sources": [],
+            "from_kb": False
+        })
+    
+    # Get answer from GeminiHandler
+    result = gemini_handler.answer_question(question)
+    
+    return jsonify(result)
+
+@app.route('/api/clear-memory', methods=['POST'])
+def clear_memory():
+    global gemini_handler
+    
+    if gemini_handler is not None:
+        # Create a new memory instance
+        gemini_handler.memory = ConversationBufferMemory(
+            memory_key="chat_history",
+            return_messages=True
+        )
+        gemini_handler.save_memory()
+        
+        return jsonify({"status": "memory cleared"})
+    else:
+        return jsonify({"status": "error", "message": "Handler not initialized"}), 400
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    # Print out the routes for debugging
+    logger.info("Registered routes:")
+    for rule in app.url_map.iter_rules():
+        logger.info(f"Route: {rule.rule}, Methods: {rule.methods}")
+    app.run(host='0.0.0.0', port=port, debug=True)
