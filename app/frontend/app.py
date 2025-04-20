@@ -19,7 +19,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Create a unique session ID if it doesn't exist
+
 if 'session_id' not in st.session_state:
     import uuid
     st.session_state.session_id = str(uuid.uuid4())
